@@ -7,6 +7,8 @@ import messageRoutes from "./routes/message.route.js";
 import { connectDB } from "./lib/db.js";
 import { app, server } from "./lib/socket.js";
 const PORT = process.env.PORT || 5001; 
+import path from "path";
+const __dirname = path.resolve();
 
 dotenv.config(); // Load environment variables
 app.use(express.json({ limit: "10mb" })); 
@@ -19,6 +21,14 @@ app.use(cors({
 
 app.use("/api/auth", authRoutes);
 app.use("/api/message", messageRoutes);
+
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    });
+  }
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
