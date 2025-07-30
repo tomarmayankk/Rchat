@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X } from "lucide-react";
+import { Image, SendHorizontal, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 const MessagesInput = () => {
@@ -48,7 +48,7 @@ const MessagesInput = () => {
   };
 
   return (
-    <div className="w-full bg-blue-100" style={{padding: "10px"}}>
+    <div className="w-full border-t border-gray-300" style={{padding: "10px"}}>
       {imagePreview && (
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -71,36 +71,36 @@ const MessagesInput = () => {
 
       <form onSubmit={handleSendMessage} className="flex items-center gap-2" style={{padding: "6px"}}>
         <div className="flex-1 flex items-center justify-center gap-2">
-          <input
-            type="text"
-            style={{padding: "8px"}}
-            className="w-full input rounded-lg input-sm sm:input-md"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <input
+        <input
             type="file"
             accept="image/*"
             className="hidden"
             ref={fileInputRef}
             onChange={handleImageChange}
           />
-          <button
+        <button
             type="button"
             className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+                     ${imagePreview ? "text-emerald-500" : "text-zinc-500"}`}
             onClick={() => fileInputRef.current?.click()}
           >
             <Image size={20} />
           </button>
+          <input
+            type="text"
+            style={{padding: "8px"}}
+            className="w-full input rounded-lg input-sm sm:input-md outline-none"
+            placeholder="Type a message..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
         </div>
         <button
           type="submit"
           className="btn btn-sm btn-circle"
           disabled={!text.trim() && !imagePreview}
         >
-          <Send size={22} />
+          <SendHorizontal size={22} />
         </button>
       </form>
     </div>

@@ -4,46 +4,55 @@ import cloudinary from "../lib/cloudinary.js"
 import bcrypt from "bcryptjs"
 
 export const signup = async (req, res) => {
-    const {fullName, email, password} = req.body;
+    const { fullName, username, email, age, password } = req.body;
+  
     try {
-        if(password.length < 6) {
-            res.status(400).json({message: "password must be at least 6 characters"})
-        }
-        const user = await User.findOne({email})
-
-        if(user) {
-            return res.status(400).json({message: "user already exists"})
-        }
-
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
-
-        const newUser = new User({
-            fullName,
-            email,
-            password: hashedPassword,
-        })
-
-        if(newUser){
-            //generate a jwt token
-            generateToken(newUser._id, res);
-            await newUser.save()
-
-            res.status(200).json({
-                _id: newUser._id,
-                fullName: newUser.fullName,
-                email: newUser.email,
-                profilePic: newUser.profilePic
-            })
-        } else {
-            res.status(400).json({message: "invalid user data"})
-        }
-
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+  
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+  
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+  
+      const newUser = new User({
+        fullName,
+        email,
+        username,
+        age,
+        password: hashedPassword,
+      });
+  
+      if (newUser) {
+        generateToken(newUser._id, res);
+        await newUser.save();
+  
+        res.status(200).json({
+          _id: newUser._id,
+          fullName: newUser.fullName,
+          username: newUser.username,
+          email: newUser.email,
+          age: newUser.age,
+          profilePic: newUser.profilePic,
+        });
+      } else {
+        res.status(400).json({ message: "Invalid user data" });
+      }
     } catch (error) {
-        console.log("error in signUp component part")
-        res.status(500).json({message: "Internal server error"})
+      console.log("error in signup controller:", error.message);
+      res.status(500).json({ message: "Internal server error" });
     }
-}
+  };
+  
 export const login = async (req, res) => {
     const {email, password} = req.body;
 
@@ -107,3 +116,20 @@ export const checkAuth =  (req, res) => {
         res.status(500).json({message: "internal server error"})
     }
 }
+
+export const checkUsernameAvailability = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const existingUser = await User.findOne({ username });
+
+    if (existingUser) {
+      return res.status(200).json({ available: false });
+    }
+
+    res.status(200).json({ available: true });
+  } catch (error) {
+    console.log("error in checkUsernameAvailability:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

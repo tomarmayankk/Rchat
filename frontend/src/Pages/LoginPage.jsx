@@ -7,55 +7,80 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const {login, isLoggingIn} = useAuthStore();
+  const { login, isLoggingIn } = useAuthStore();
+
   const handleSubmit = (e) => {
     e.preventDefault();
-      login(formData)
+    login(formData);
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-[638px]">
-      <div className="flex flex-col items-center justify-center bg-gray-50 rounded-md shadow-xl w-96 h-[450px] gap-12">
-        <h1 className="text-3xl font-bold">Login</h1>
-        <form
-          action=""
-          onSubmit={handleSubmit}
-          className="flex flex-col items-center gap-6 font-semibold"
+    <div
+      className="flex justify-center items-center w-full bg-gray-100"
+      style={{ minHeight: "calc(100vh - 4px)", margin: 0, padding: 0 }}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl w-96"
+        style={{ padding: "24px", margin: 0 }}
+      >
+        <h1
+          className="text-2xl font-bold text-center"
+          style={{ marginBottom: "16px" }}
         >
-          <div className="flex flex-col">
-            <label htmlFor="">Email</label>
-            <input
-              type="text"
-              placeholder="jondoe@gmail.com"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="border-2 rounded-sm w-80 h-8 placeholder:p-2"
-              style={{ padding: "8px" }}
-            />
-          </div>
+          Login
+        </h1>
 
-          <div className="flex flex-col">
-            <label htmlFor="">Password</label>
-            <input
-              type="password"
-              placeholder="********"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="border-2 rounded-sm w-80 h-8 placeholder:p-2"
-              style={{ padding: "8px" }}
-            />
-          </div>
-          <button type="submit" className="w-32 bg-blue-800 text-white font-semibold h-10 rounded-sm hover:bg-blue-700 cursor-pointer" disabled={isLoggingIn} >
-            { isLoggingIn ? (
-              <> Loading.... </>
-            ): (
-              "Login"
-            )}
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col"
+        >
+          <label className="text-sm font-medium" style={{ marginBottom: "4px" }}>
+            Email
+          </label>
+          <input
+            type="email"
+            placeholder="jondoe@gmail.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="border border-gray-300 rounded-2xl w-full outline-none"
+            required
+            style={{ padding: "8px", marginBottom: "12px" }}
+          />
+
+          <label className="text-sm font-medium" style={{ marginBottom: "4px" }}>
+            Password
+          </label>
+          <input
+            type="password"
+            placeholder="********"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            className="border border-gray-300 rounded-2xl w-full outline-none"
+            required
+            style={{ padding: "8px", marginBottom: "12px" }}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoggingIn}
+            className="bg-amber-600 text-white font-bold rounded-2xl w-full hover:bg-amber-700"
+            style={{ padding: "8px", marginTop: "8px" }}
+          >
+            {isLoggingIn ? "Logging in..." : "Login"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link to="/signup" className="text-blue-600 hover:underline">
+
+        <p
+          className="text-center text-sm text-gray-600"
+          style={{ marginTop: "12px" }}
+        >
+          Don’t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-blue-500 hover:underline"
+          >
             Go to Register
           </Link>
         </p>

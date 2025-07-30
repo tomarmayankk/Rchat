@@ -5,6 +5,37 @@ import ChatHeader from "./ChatHeader";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
+// Helper to group messages by date
+const groupMessagesByDate = (messages) => {
+  const grouped = [];
+  let lastDate = null;
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+  messages.forEach((msg) => {
+    const msgDate = new Date(msg.createdAt).toDateString();
+
+    if (msgDate !== lastDate) {
+      let label = msgDate;
+      if (msgDate === today) label = "Today";
+      else if (msgDate === yesterday) label = "Yesterday";
+      else
+        label = new Date(msg.createdAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+
+      grouped.push({ type: "label", label });
+      lastDate = msgDate;
+    }
+
+    grouped.push({ type: "message", ...msg });
+  });
+
+  return grouped;
+};
+
 const ChatContainer = () => {
   const {
     messages,
@@ -14,15 +45,18 @@ const ChatContainer = () => {
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useChatStore();
+
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
+    if (!selectedUser) return;
+
     getMessages(selectedUser._id);
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -30,129 +64,97 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
-  if (isMessagesLoading)
-    return <div style={{ textAlign: "center", padding: "20px" }}>Loading...</div>;
+  if (!selectedUser) {
+    return (
+      <div className="flex items-center justify-center flex-1 text-gray-500 text-lg border border-gray-300 rounded-lg">
+        <p>Select a user to start chatting</p>
+      </div>
+    );
+  }
+
+  if (isMessagesLoading) {
+    return <div className="text-center py-5">Loading...</div>;
+  }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "auto",
-      }}
-    >
+    <div className="flex flex-1 flex-col overflow-auto border border-gray-300 rounded-lg">
       <ChatHeader />
       <div
+        className="flex flex-1 flex-col gap-3 no-scrollbar overflow-auto"
         style={{
-          flex: 1,
           padding: "15px",
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
+          backgroundImage: `radial-gradient(#555 0.6px, transparent 0.6px)`,
+          backgroundSize: "20px 20px",
+          backgroundColor: "#fefefe",
         }}
-        className="no-scrollbar"
       >
-        {messages.map((msg) => {
+        {groupMessagesByDate(messages).map((item, index) => {
+          if (item.type === "label") {
+            return (
+              <div
+                key={`label-${index}`}
+                className="text-center text-xs text-gray-500"
+                style={{ margin: "8px 0px" }}
+              >
+                {item.label}
+              </div>
+            );
+          }
+
+          const msg = item;
           const isSentByMe = msg.senderId === authUser._id;
 
           return (
             <div
               key={msg._id}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: isSentByMe ? "flex-end" : "flex-start",
-                gap: "3px",
-              }}
+              className={`flex flex-col gap-1 ${isSentByMe ? "items-end" : "items-start"}`}
               ref={messageEndRef}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: isSentByMe ? "flex-end" : "flex-start",
-                  gap: "10px",
-                }}
-              >
-                {/* Avatar (Left for received messages, right for sent messages) */}
+              <div className={`flex items-end gap-3 ${isSentByMe ? "justify-end" : "justify-start"}`}>
                 {!isSentByMe && (
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      overflow: "hidden",
-                      border: "2px solid #ccc",
-                    }}
-                  >
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300">
                     <img
                       src={selectedUser.profilePic || "/avatar.png"}
                       alt="Profile"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 )}
 
-                {/* Message Bubble */}
                 <div
+                  className={`max-w-[70%] text-sm relative flex flex-col ${
+                    isSentByMe ? "bg-slate-900 text-white" : "bg-white border border-gray-300 text-black"
+                  }`}
                   style={{
-                    maxWidth: "70%",
                     borderRadius: "18px",
-                    backgroundColor: isSentByMe ? "#007AFF" : "#E5E5EA",
-                    color: isSentByMe ? "#fff" : "#000",
-                    fontSize: "14px",
-                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.15)",
-                    position: "relative",
-                    padding: msg.image ? "5px" : "12px 16px",
-                    display: "flex",
-                    flexDirection: "column",
+                    padding: msg.image ? "10px" : "12px 16px",
                     gap: msg.text ? "8px" : "0",
                   }}
                 >
-                  {/* Image (if present) */}
                   {msg.image && (
                     <img
                       src={msg.image}
-                      alt="Sent Image"
-                      style={{
-                        maxWidth: "200px",
-                        borderRadius: "12px",
-                        display: "block",
-                      }}
+                      alt="Sent"
+                      className="max-w-[200px] rounded-lg"
                     />
                   )}
-
-                  {/* Text (if present) */}
-                  {msg.text && <p style={{ margin: 0 }}>{msg.text}</p>}
+                  {msg.text && <p className="m-0">{msg.text}</p>}
                 </div>
 
-                {/* Avatar for sent messages */}
                 {isSentByMe && (
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      overflow: "hidden",
-                      border: "2px solid #ccc",
-                    }}
-                  >
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-300">
                     <img
                       src={authUser.profilePic || "/avatar.png"}
                       alt="Profile"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 )}
               </div>
 
-              {/* Timestamp (Now properly positioned below message) */}
               <div
+                className="text-xs opacity-60"
                 style={{
-                  fontSize: "12px",
-                  opacity: 0.6,
                   marginLeft: isSentByMe ? "auto" : "50px",
                   marginTop: "2px",
                 }}
